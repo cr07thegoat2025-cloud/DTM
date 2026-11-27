@@ -1,0 +1,128 @@
+[gd_scene load_steps=5 format=3 uid="uid://track_suzuka"]
+
+[ext_resource type="Script" path="res://scripts/track.gd" id="1_track"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_asphalt"]
+albedo_color = Color(0.15, 0.15, 0.17, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Mat_grass"]
+albedo_color = Color(0.2, 0.45, 0.15, 1)
+roughness = 1.0
+
+[sub_resource type="BoxShape3D" id="BoxShape_cp"]
+size = Vector3(20, 5, 2)
+
+[node name="TrackSuzuka" type="Node3D"]
+script = ExtResource("1_track")
+
+[node name="Environment" type="Node3D" parent="."]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Environment"]
+transform = Transform3D(0.866, -0.354, 0.354, 0, 0.707, 0.707, -0.5, -0.612, 0.612, 0, 50, 0)
+shadow_enabled = true
+directional_shadow_max_distance = 200.0
+
+[node name="Ground" type="CSGCombiner3D" parent="."]
+use_collision = true
+
+[node name="Base" type="CSGBox3D" parent="Ground"]
+size = Vector3(400, 1, 400)
+material = SubResource("Mat_grass")
+
+[node name="TrackSurface" type="CSGCombiner3D" parent="Ground"]
+
+[node name="Straight1" type="CSGBox3D" parent="Ground/TrackSurface"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, -80)
+size = Vector3(12, 0.3, 120)
+material = SubResource("Mat_asphalt")
+
+[node name="Curve1" type="CSGCylinder3D" parent="Ground/TrackSurface"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0.6, -140)
+radius = 40.0
+height = 0.3
+sides = 32
+material = SubResource("Mat_asphalt")
+
+[node name="Straight2" type="CSGBox3D" parent="Ground/TrackSurface"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 80, 0.6, -100)
+size = Vector3(12, 0.3, 80)
+material = SubResource("Mat_asphalt")
+
+[node name="Curve2" type="CSGCylinder3D" parent="Ground/TrackSurface"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 80, 0.6, -40)
+radius = 30.0
+height = 0.3
+sides = 24
+material = SubResource("Mat_asphalt")
+
+[node name="Straight3" type="CSGBox3D" parent="Ground/TrackSurface"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0.6, 20)
+size = Vector3(12, 0.3, 100)
+material = SubResource("Mat_asphalt")
+
+[node name="Hairpin" type="CSGCylinder3D" parent="Ground/TrackSurface"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0.6, 80)
+radius = 25.0
+height = 0.3
+sides = 24
+material = SubResource("Mat_asphalt")
+
+[node name="BackStraight" type="CSGBox3D" parent="Ground/TrackSurface"]
+transform = Transform3D(0.707, 0, 0.707, 0, 1, 0, -0.707, 0, 0.707, -60, 0.6, 40)
+size = Vector3(12, 0.3, 140)
+material = SubResource("Mat_asphalt")
+
+[node name="FinalCurve" type="CSGCylinder3D" parent="Ground/TrackSurface"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 0.6, -60)
+radius = 35.0
+height = 0.3
+sides = 28
+material = SubResource("Mat_asphalt")
+
+[node name="StartLine" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -30)
+
+[node name="Checkpoints" type="Node3D" parent="."]
+
+[node name="CP0" type="Area3D" parent="Checkpoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -20)
+monitoring = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Checkpoints/CP0"]
+shape = SubResource("BoxShape_cp")
+
+[node name="CP1" type="Area3D" parent="Checkpoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 2, -140)
+monitoring = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Checkpoints/CP1"]
+shape = SubResource("BoxShape_cp")
+
+[node name="CP2" type="Area3D" parent="Checkpoints"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 80, 2, -100)
+monitoring = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Checkpoints/CP2"]
+shape = SubResource("BoxShape_cp")
+
+[node name="CP3" type="Area3D" parent="Checkpoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 2, 20)
+monitoring = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Checkpoints/CP3"]
+shape = SubResource("BoxShape_cp")
+
+[node name="CP4" type="Area3D" parent="Checkpoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 2, 80)
+monitoring = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Checkpoints/CP4"]
+shape = SubResource("BoxShape_cp")
+
+[node name="CP5" type="Area3D" parent="Checkpoints"]
+transform = Transform3D(0.707, 0, 0.707, 0, 1, 0, -0.707, 0, 0.707, -60, 2, 40)
+monitoring = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Checkpoints/CP5"]
+shape = SubResource("BoxShape_cp")
