@@ -1,0 +1,94 @@
+[gd_scene load_steps=3 format=3 uid="uid://car001"]
+
+[ext_resource type="Script" path="res://scripts/car_controller.gd" id="1_car"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_body"]
+size = Vector3(1.8, 0.6, 4.2)
+
+[node name="Car" type="VehicleBody3D"]
+mass = 1200.0
+center_of_mass_mode = 1
+center_of_mass = Vector3(0, -0.2, 0.1)
+script = ExtResource("1_car")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+shape = SubResource("BoxShape3D_body")
+
+[node name="CarMesh" type="Node3D" parent="."]
+
+[node name="WheelFL" type="VehicleWheel3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.78, 0.32, -1.35)
+use_as_traction = true
+use_as_steering = true
+wheel_radius = 0.32
+wheel_rest_length = 0.15
+suspension_travel = 0.2
+suspension_stiffness = 40.0
+suspension_max_force = 8000.0
+damping_compression = 0.6
+damping_relaxation = 0.8
+wheel_friction_slip = 2.5
+
+[node name="WheelFR" type="VehicleWheel3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.78, 0.32, -1.35)
+use_as_traction = true
+use_as_steering = true
+wheel_radius = 0.32
+wheel_rest_length = 0.15
+suspension_travel = 0.2
+suspension_stiffness = 40.0
+suspension_max_force = 8000.0
+damping_compression = 0.6
+damping_relaxation = 0.8
+wheel_friction_slip = 2.5
+
+[node name="WheelRL" type="VehicleWheel3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.78, 0.32, 1.25)
+use_as_traction = true
+wheel_radius = 0.32
+wheel_rest_length = 0.15
+suspension_travel = 0.2
+suspension_stiffness = 40.0
+suspension_max_force = 8000.0
+damping_compression = 0.6
+damping_relaxation = 0.8
+wheel_friction_slip = 2.8
+
+[node name="WheelRR" type="VehicleWheel3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.78, 0.32, 1.25)
+use_as_traction = true
+wheel_radius = 0.32
+wheel_rest_length = 0.15
+suspension_travel = 0.2
+suspension_stiffness = 40.0
+suspension_max_force = 8000.0
+damping_compression = 0.6
+damping_relaxation = 0.8
+wheel_friction_slip = 2.8
+
+[node name="Cameras" type="Node3D" parent="."]
+
+[node name="ChaseCam" type="Camera3D" parent="Cameras"]
+transform = Transform3D(1, 0, 0, 0, 0.94, 0.342, 0, -0.342, 0.94, 0, 2.5, 6.5)
+current = true
+fov = 70.0
+far = 500.0
+
+[node name="BonnetCam" type="Camera3D" parent="Cameras"]
+transform = Transform3D(1, 0, 0, 0, 0.985, 0.174, 0, -0.174, 0.985, 0, 1.0, -0.3)
+fov = 75.0
+far = 500.0
+
+[node name="CockpitCam" type="Camera3D" parent="Cameras"]
+transform = Transform3D(1, 0, 0, 0, 0.996, 0.087, 0, -0.087, 0.996, 0.3, 1.1, 0.4)
+fov = 80.0
+far = 500.0
+
+[node name="EngineAudio" type="AudioStreamPlayer3D" parent="."]
+volume_db = -8.0
+max_distance = 80.0
+
+[node name="TireAudio" type="AudioStreamPlayer3D" parent="."]
+volume_db = -12.0
+max_distance = 40.0
