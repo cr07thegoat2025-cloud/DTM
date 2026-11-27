@@ -12,8 +12,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          lfs: true
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -21,41 +19,28 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Download Godot 4.3
+      - name: Download Godot 4.3 + templates
         run: |
           wget -q https://github.com/godotengine/godot-builds/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip
           unzip -q Godot_v4.3-stable_linux.x86_64.zip
           mv Godot_v4.3-stable_linux.x86_64 godot
           chmod +x godot
 
-      - name: Download and install export templates + Android build template
-        run: |
           wget -q https://github.com/godotengine/godot-builds/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz
           mkdir -p ~/.local/share/godot/export_templates/4.3.stable
           unzip -q Godot_v4.3-stable_export_templates.tpz -d /tmp/templates
           cp /tmp/templates/templates/* ~/.local/share/godot/export_templates/4.3.stable/
 
-          # Install the Android build template into the project (required for Gradle)
-          # The android_source.zip lives inside the templates
+          # Install Android build template into project
+          echo "Looking for android_source.zip..."
+          find /tmp/templates -name "*android*" -type f
           if [ -f /tmp/templates/templates/android_source.zip ]; then
             mkdir -p android
-            unzip -q /tmp/templates/templates/android_source.zip -d android/
-            # Godot expects the structure under android/build
-            if [ -d android/build ]; then
-              echo "Android build template installed"
-            else
-              # some versions put contents directly
-              ls -la android/
-            fi
-          else
-            echo "android_source.zip not found in templates"
-            find /tmp/templates -name "*android*" || true
+            unzip -o -q /tmp/templates/templates/android_source.zip -d android/
+            ls -la android/
           fi
 
-      - name: Create export_presets.cfg
+      - name: Create export_presets.cfg (classic non-gradle for reliability)
         run: |
           cat > export_presets.cfg << 'EOF'
           [preset.0]
@@ -77,10 +62,7 @@ jobs:
           [preset.0.options]
           custom_template/debug=""
           custom_template/release=""
-          gradle_build/use_gradle_build=true
-          gradle_build/export_format=0
-          gradle_build/min_sdk="24"
-          gradle_build/target_sdk="34"
+          gradle_build/use_gradle_build=false
           architectures/armeabi-v7a=false
           architectures/arm64-v8a=true
           architectures/x86=false
@@ -91,13 +73,7 @@ jobs:
           package/name="DTM"
           package/signed=true
           package/app_category=2
-          package/retain_data_on_uninstall=false
-          package/exclude_from_recents=false
           screen/immersive_mode=true
-          screen/support_small=true
-          screen/support_normal=true
-          screen/support_large=true
-          screen/support_xlarge=true
           permissions/access_network_state=true
           permissions/internet=true
           EOF
@@ -110,13 +86,11 @@ jobs:
       - name: Export APK
         run: |
           mkdir -p build
-          # First let Godot import the project
-          ./godot --headless --path . --editor --quit-after 3 2>&1 || true
-          # Now export
-          ./godot --headless --path . --export-debug "Android" build/DTM.apk 2>&1
-          echo "=== build dir ==="
+          ./godot --headless --path . --import 2>&1 || true
+          ./godot --headless --path . --export-debug "Android" build/DTM.apk 2>&1 || true
+          echo "=== Results ==="
           ls -lh build/ || true
-          find . -name "*.apk" -ls || true
+          find . -name "*.apk" -ls 2>/dev/null || echo "No APK found"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -127,12 +101,3 @@ jobs:
             build/*.apk
             **/*.apk
           if-no-files-found: warn
-
-      - name: Create Release (only on tags)
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: build/DTM.apk
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
