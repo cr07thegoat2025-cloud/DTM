@@ -21,6 +21,9 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Download Godot 4.3
         run: |
           wget -q https://github.com/godotengine/godot-builds/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip
@@ -28,12 +31,29 @@ jobs:
           mv Godot_v4.3-stable_linux.x86_64 godot
           chmod +x godot
 
-      - name: Download Android export templates
+      - name: Download and install export templates + Android build template
         run: |
           wget -q https://github.com/godotengine/godot-builds/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz
           mkdir -p ~/.local/share/godot/export_templates/4.3.stable
           unzip -q Godot_v4.3-stable_export_templates.tpz -d /tmp/templates
           cp /tmp/templates/templates/* ~/.local/share/godot/export_templates/4.3.stable/
+
+          # Install the Android build template into the project (required for Gradle)
+          # The android_source.zip lives inside the templates
+          if [ -f /tmp/templates/templates/android_source.zip ]; then
+            mkdir -p android
+            unzip -q /tmp/templates/templates/android_source.zip -d android/
+            # Godot expects the structure under android/build
+            if [ -d android/build ]; then
+              echo "Android build template installed"
+            else
+              # some versions put contents directly
+              ls -la android/
+            fi
+          else
+            echo "android_source.zip not found in templates"
+            find /tmp/templates -name "*android*" || true
+          fi
 
       - name: Create export_presets.cfg
         run: |
@@ -73,47 +93,30 @@ jobs:
           package/app_category=2
           package/retain_data_on_uninstall=false
           package/exclude_from_recents=false
-          launcher_icons/main_192x192=""
-          launcher_icons/adaptive_foreground_432x432=""
-          launcher_icons/adaptive_background_432x432=""
           screen/immersive_mode=true
           screen/support_small=true
           screen/support_normal=true
           screen/support_large=true
           screen/support_xlarge=true
-          user_data_backup/allow=false
-          command_line/extra_args=""
-          apk_expansion/enable=false
-          permissions/custom_permissions=false
           permissions/access_network_state=true
           permissions/internet=true
           EOF
 
-      - name: Setup keystore
-        id: keystore
-        env:
-          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      - name: Setup debug keystore
         run: |
           mkdir -p build
-          if [ -n "$KEYSTORE_B64" ]; then
-            echo "$KEYSTORE_B64" | base64 -d > build/release.keystore
-            echo "signed=true" >> $GITHUB_OUTPUT
-          else
-            keytool -genkeypair -v -keystore build/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=DTM Debug,O=DTM,C=US"
-            echo "signed=false" >> $GITHUB_OUTPUT
-          fi
+          keytool -genkeypair -v -keystore build/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=DTM Debug,O=DTM,C=US"
 
       - name: Export APK
         run: |
           mkdir -p build
-          # Godot needs the keystore path in editor settings or we pass via command, but simplest is debug first
-          ./godot --headless --export-debug "Android" build/DTM.apk 2>&1 || true
+          # First let Godot import the project
+          ./godot --headless --path . --editor --quit-after 3 2>&1 || true
+          # Now export
+          ./godot --headless --path . --export-debug "Android" build/DTM.apk 2>&1
+          echo "=== build dir ==="
           ls -lh build/ || true
-          if [ ! -f build/DTM.apk ]; then
-            echo "APK not found, listing project..."
-            ls -la
-            find . -name "*.apk" || true
-          fi
+          find . -name "*.apk" -ls || true
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
